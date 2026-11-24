@@ -1,0 +1,1210 @@
+{
+  "name": "ai-telegram-bot",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt://b1g0hdptt88kf05njehf/yandexgpt-5-pro/latest",
+          "mode": "list",
+          "cachedResultName": "gpt://b1g0hdptt88kf05njehf/yandexgpt-5-pro/latest"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1760,
+        384
+      ],
+      "id": "849f20b6-4e4e-427e-a931-7d5a87d79767",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "OH0fysSrBT4TlCbl",
+          "name": "OpenAI account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.userInput }}",
+        "options": {
+          "systemMessage": "={{ $json.systemPrompt }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1824,
+        112
+      ],
+      "id": "33017552-39d4-4413-9aba-4ba55c548bdf",
+      "name": "AI Agent1",
+      "notesInFlow": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "query": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Query', ``, 'string') }}",
+        "includeDomains": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Include_Domains', ``, 'string') }}",
+        "excludeDomains": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Exclude_Domains', ``, 'string') }}",
+        "simple": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Simplify', ``, 'boolean') }}",
+        "options": {}
+      },
+      "type": "@tavily/n8n-nodes-tavily.tavilyTool",
+      "typeVersion": 2,
+      "position": [
+        2128,
+        336
+      ],
+      "id": "495efdda-5301-48b5-9fdc-8d01627c5ece",
+      "name": "Search the web in Tavily",
+      "credentials": {
+        "tavilyApi": {
+          "id": "164AbOH3YafIk1QU",
+          "name": "Tavily account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "*"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        224,
+        96
+      ],
+      "id": "e51c9392-0715-4eed-aa0e-34b4e2d1aa0d",
+      "name": "Telegram Trigger",
+      "webhookId": "356a4c36-12b8-47ce-b397-5e43cb3f5ecf",
+      "credentials": {
+        "telegramApi": {
+          "id": "VrGBXmDf2lWWK8w0",
+          "name": "Telegram account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2720,
+        144
+      ],
+      "id": "7f1f6766-aa6e-42e1-afca-f4865649a058",
+      "name": "Send a text message",
+      "webhookId": "4daf8137-751a-4304-8d0f-b9083f456cf7",
+      "credentials": {
+        "telegramApi": {
+          "id": "VrGBXmDf2lWWK8w0",
+          "name": "Telegram account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.chat.id }}",
+        "contextWindowLength": 20
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        1920,
+        416
+      ],
+      "id": "a6658c1b-fbd5-4538-9783-e1086321d6d3",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.photo }}",
+                    "rightValue": "={{ $json.message.photo[0].file_id }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "233f1f1c-765a-40f3-b59d-8ff625a3c2c1"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "58d91f0e-bd4b-4fa2-92ad-f6c8d50bcabc",
+                    "leftValue": "={{ $json.message.voice }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        496,
+        80
+      ],
+      "id": "5148ccdb-85de-4afa-83fe-11771a00fa15",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/file/bot{{ $env.TG_BOT_TOKEN }}/{{ $json.result.file_path }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        912,
+        -32
+      ],
+      "id": "4e2ffb6d-895c-48f7-8339-b83500a0cb73",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-flash-latest",
+          "mode": "list",
+          "cachedResultName": "models/gemini-flash-latest"
+        },
+        "text": "Ты — инструмент оптического распознавания текста (OCR). Твоя единственная задача — извлечь весь видимый текст с изображения.\n\nПРАВИЛА:\n1. Если на картинке КОД — перепиши его полностью, сохраняя структуру, отступы и форматирование. Используй markdown-блоки кода.\n2. Если на картинке ТЕКСТ (документ, сообщение, ошибка) — перепиши его дословно.\n3. Если на картинке КАРТИНА/ФОТО/МЕСТО без текста — опиши только видимые объекты кратко и фактологично (например: \"На фото мужчина в красной рубашке играет на гармони, рядом пожилой человек с бородой, на фоне деревянная мастерская\").\n4. НЕ анализируй, НЕ интерпретируй, НЕ делай выводов. Только извлеки то, что видишь.\n5. Отвечай на русском языке.\n\nФОРМАТ ОТВЕТА:\n- Для кода: ```код```\n- Для текста: просто текст\n- Для изображений без текста: краткое фактологическое описание",
+        "inputType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1232,
+        -32
+      ],
+      "id": "4e089adb-7674-47db-8f21-f3631369e384",
+      "name": "Analyze an image",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "XE4PazO5dWH01EsC",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Берем бинарные данные из предыдущей ноды\nconst binaryData = $binary.data;\n\n// Меняем MIME-тип на правильный для JPEG\nbinaryData.mimeType = 'image/jpeg';\n\n// Возвращаем данные дальше по цепочке\nreturn [{\n  json: $json,\n  binary: {\n    data: binaryData\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        -32
+      ],
+      "id": "c2bbcc8b-f41d-4425-856b-4fd973093884",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "const geminiText = $json.content?.parts?.[0]?.text || '';\n\n// Возвращаем в формате, как будто это пришло от Telegram\nreturn [{\n  json: {\n    message: {\n      text: geminiText,\n      chat: {\n        id: $('Telegram Trigger').item.json.message.chat.id\n      }\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1424,
+        -48
+      ],
+      "id": "c11b5443-06fd-46b9-b036-e07fa398fe4a",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/file/bot{{ $env.TG_BOT_TOKEN }}/{{ $json.result.file_path }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        928,
+        240
+      ],
+      "id": "3a341afe-ab5f-49d5-b48d-951a0b6d9c13",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://stt.api.cloud.yandex.net/speech/v1/stt:recognize?folderId={{ $env.YANDEX_FOLDER_ID }}&languageCode=ru-RU&format=oggopus",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1104,
+        240
+      ],
+      "id": "87388834-7aa1-478e-8341-5ff2432ae311",
+      "name": "HTTP Request2",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "W8ErnTU7rOzKgqfZ",
+          "name": "Header Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.first().json;\nconst r = resp?.result;\n\nlet recognizedText = null;\nif (typeof r === 'string' && r.trim()) {\n  recognizedText = r.trim();                                   \n} else if (Array.isArray(r?.alternatives) && r.alternatives[0]?.text) {\n  recognizedText = r.alternatives[0].text;                     \n}\n\nconst chatId = $('Telegram Trigger').first().json.message.chat.id;\n\nreturn [{\n  json: {\n    message: {\n      text: recognizedText\n        ? recognizedText\n        : '[система]: пользователь прислал голосовое сообщение, но распознавание не удалось (речь не содержит слов или ошибка SpeechKit). Извинись и попроси продублировать запрос текстом.',\n      chat: { id: chatId }\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        240
+      ],
+      "id": "49913110-1203-4519-9f3b-a3155371a00d",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// PARSER: JSON для презентаций/докладов\n// ============================================\nconst raw = $json.output || $json.text || '';\nconst chatId = $json.chatId || $('Telegram Trigger').first().json.message.chat.id;\n\n/**\n * Извлекает JSON из ответа агента\n * Ищет: 1) в fenced code blocks ```json ... ```, 2) в чистом тексте { ... }\n */\nfunction extractJson(text) {\n  // Пробуем найти fenced code block\n  const fenced = text.match(/```(?:json)?\\s*([\\s\\S]*?)```/);\n  const candidate = fenced ? fenced[1] : text;\n  \n  // Ищем начало и конец JSON-объекта\n  const s = candidate.indexOf('{');\n  const e = candidate.lastIndexOf('}');\n  \n  if (s === -1 || e <= s) return null;\n  \n  try {\n    return JSON.parse(candidate.slice(s, e + 1));\n  } catch {\n    return null;\n  }\n}\n\n// Пробуем распарсить JSON\nconst parsed = extractJson(raw);\n\n// Если это презентация\nif (parsed?.type === 'presentation') {\n  return [{\n    json: {\n      isPresentation: true,\n      isWord: false,\n      presentationData: parsed,\n      chatId: chatId\n    }\n  }];\n}\n\n// Если это доклад\nif (parsed?.type === 'word_document') {\n  return [{\n    json: {\n      isPresentation: false,\n      isWord: true,\n      wordData: parsed,\n      chatId: chatId\n    }\n  }];\n}\n\n// FALLBACK: обычный текстовый ответ\n// ВАЖНО: возвращаем ОРИГИНАЛЬНЫЙ raw, а не очищенный!\n// Бэктики остаются на месте для markdown-форматирования кода\nreturn [{\n  json: {\n    isPresentation: false,\n    isWord: false,\n    text: raw,\n    chatId: chatId,\n    // Флаг для будущей retry-логики (P2.4):\n    // если агент пытался сделать презентацию/доклад, но JSON не распарсился\n    parseFailed: /презентац|доклад|pptx|word|docx/i.test($('AI Agent1').first().json.input || '')\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2192,
+        112
+      ],
+      "id": "6c6f982b-410c-41b4-a7e8-6c6c30d6111f",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.isPresentation }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    },
+                    "id": "9f39cca1-cece-4443-bb9a-7bf6d1cb479b"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "8ae69ca0-7323-46f7-96c3-15f0cc7e2036",
+                    "leftValue": "={{ $json.isWord }}",
+                    "rightValue": true,
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        2400,
+        96
+      ],
+      "id": "e0bf3c2d-586a-4ccb-abbc-9a6358492a69",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.FILE_GENERATOR_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.requestBody }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2816,
+        -80
+      ],
+      "id": "ef08f543-7387-453a-8d23-db587eb120bb",
+      "name": "HTTP Request3",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.FILE_GENERATOR_URL }}/{{ $json.filePath.replace(/\\\\/g, '/').split('/').map(encodeURIComponent).join('/') }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        3008,
+        -256
+      ],
+      "id": "4797d312-d5b5-4da6-b979-a7cb68e95ec7",
+      "name": "HTTP Request4"
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3168,
+        -256
+      ],
+      "id": "f1595344-2903-4d28-808d-a1a13ff53ec6",
+      "name": "Send a document",
+      "webhookId": "b2d70a5f-294f-4588-a58c-d5ffa114687a",
+      "credentials": {
+        "telegramApi": {
+          "id": "VrGBXmDf2lWWK8w0",
+          "name": "Telegram account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.FILE_GENERATOR_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.requestBody) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2816,
+        304
+      ],
+      "id": "cb1faef4-8522-4f0d-b449-38a30f68ae5a",
+      "name": "HTTP Request5",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.FILE_GENERATOR_URL }}/{{ $json.filePath.replace(/\\\\/g, '/').split('/').map(encodeURIComponent).join('/') }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        3008,
+        288
+      ],
+      "id": "a40f9d07-4e76-4853-9942-dfd0c420c8bf",
+      "name": "HTTP Request6"
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "={{ $('Telegram Trigger').first().json.message.chat.id }}",
+        "binaryData": true,
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3184,
+        288
+      ],
+      "id": "e0e48246-a9b3-43eb-a0fa-1c6799b61cec",
+      "name": "Send a document1",
+      "webhookId": "4e7d72c6-985d-4260-a444-7c58e0486712",
+      "credentials": {
+        "telegramApi": {
+          "id": "VrGBXmDf2lWWK8w0",
+          "name": "Telegram account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "=📄 Собираю презентацию, это займёт около минуты…",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2640,
+        -256
+      ],
+      "id": "2b6c38b0-aa6a-464b-a94b-beede35c888d",
+      "name": "Status: presentation",
+      "webhookId": "c53274ce-660d-4964-a15b-981fe66b3568",
+      "credentials": {
+        "telegramApi": {
+          "id": "VrGBXmDf2lWWK8w0",
+          "name": "Telegram account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId }}",
+        "text": "=📝 Пишу доклад, подожди минуту…",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2624,
+        512
+      ],
+      "id": "0c934edd-252d-47a7-8760-a5fe233045dd",
+      "name": "Status: word",
+      "webhookId": "518fb536-7a27-4d2c-a9bb-a48a93d5c0d7",
+      "credentials": {
+        "telegramApi": {
+          "id": "VrGBXmDf2lWWK8w0",
+          "name": "Telegram account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Switch1').item.json.chatId }}",
+        "text": "=😔 Сервис генерации файлов временно недоступен. Попробуй, пожалуйста, через минуту.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3008,
+        -64
+      ],
+      "id": "05efbe6c-fbb9-4029-9df7-0a71630bf3f7",
+      "name": "Send a text message1",
+      "webhookId": "8e0a18fc-ae80-49e6-9c24-99739e89d558",
+      "credentials": {
+        "telegramApi": {
+          "id": "VrGBXmDf2lWWK8w0",
+          "name": "Telegram account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "Запрос обрабатывается, пожалуйста, подождите!",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        464,
+        -96
+      ],
+      "id": "05a11ae4-5ddf-42de-a36b-7dc5b7f3523f",
+      "name": "Send a text message2",
+      "webhookId": "48bcb6f6-6f7d-4501-886c-37a923a14312",
+      "credentials": {
+        "telegramApi": {
+          "id": "VrGBXmDf2lWWK8w0",
+          "name": "Telegram account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        736,
+        240
+      ],
+      "id": "8a4a3ab0-663c-4884-8e2c-6c66b0dc0166",
+      "name": "Get a voice",
+      "webhookId": "c94c42a4-5dc1-42a6-9419-2eb467d3c236",
+      "credentials": {
+        "telegramApi": {
+          "id": "VrGBXmDf2lWWK8w0",
+          "name": "Telegram account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.photo[$json.message.photo.length - 1].file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        736,
+        -32
+      ],
+      "id": "ff1df227-da62-437e-8208-5fbbbc040eeb",
+      "name": "Get a photo",
+      "webhookId": "48a20e9d-2667-47cb-b030-8c4b1dc266f7",
+      "credentials": {
+        "telegramApi": {
+          "id": "VrGBXmDf2lWWK8w0",
+          "name": "Telegram account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Switch1').item.json.chatId }}",
+        "text": "😔 Сервис генерации файлов временно недоступен. Попробуй, пожалуйста, через минуту.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3008,
+        480
+      ],
+      "id": "ab867fbd-6895-4f0f-b340-eba990a1c084",
+      "name": "Send a text message3",
+      "webhookId": "c58e34e7-8513-4b99-b3ec-73d89d863cca",
+      "credentials": {
+        "telegramApi": {
+          "id": "VrGBXmDf2lWWK8w0",
+          "name": "Telegram account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// БИБЛИОТЕКА ПРОМПТОВ\n// ============================================\nconst PROMPTS = {\n\n  photo_analyst: `Ты — эксперт по анализу изображений и оптическому распознаванию текста (OCR).\n\nЗАДАЧИ:\n1. Если на картинке КОД — перепиши его полностью, сохраняя структуру и форматирование. Используй markdown-блоки кода.\n2. Если на картинке ТЕКСТ (документ, сообщение, ошибка) — перепиши дословно.\n3. Если на картинке КАРТИНА/ФОТО/МЕСТО без текста — опиши видимые объекты кратко и фактологично.\n\nПРАВИЛА:\n- НЕ анализируй, НЕ интерпретируй, НЕ делай выводов. Только извлеки то, что видишь.\n- Отвечай на русском языке.\n- Будь краток и конкретен.`,\n\n  voice_assistant: `Ты — умный ассистент. Пользователь отправил голосовое сообщение, которое было распознано и преобразовано в текст.\n\nЗАДАЧИ:\n1. Ответь на вопрос пользователя четко и по делу.\n2. Если вопрос требует актуальных данных (версии библиотек, документация, новости) — используй инструмент поиска (Tavily).\n3. Если получен код — найди ошибки, объясни их, предложи исправления.\n\nПРАВИЛА:\n- Отвечай на русском языке.\n- Будь краток и конкретен, без \"воды\".\n- Если не знаешь ответа — честно скажи об этом.`,\n\n  presentation_generator: `Ты — эксперт по созданию презентаций. Твоя задача — создавать подробные, структурированные презентации на основе запросов пользователя.\n\nОТВЕЧАЙ СТРОГО В ФОРМАТЕ JSON без какого-либо дополнительного текста:\n\n{\n  \"type\": \"presentation\",\n  \"title\": \"Название презентации\",\n  \"subtitle\": \"Подзаголовок (необязательно)\",\n  \"slides\": [\n    {\n      \"title\": \"Заголовок слайда 1\",\n      \"bullets\": [\"Подробный пункт 1 (2-3 предложения)\", \"Подробный пункт 2\", \"Подробный пункт 3\"]\n    }\n  ]\n}\n\nПРАВИЛА ЗАПОЛНЕНИЯ:\n1. Количество слайдов: Минимум 8-10 слайдов для полноценной презентации.\n2. Структура:\n   - Слайд 1: Титульный (название + подзаголовок)\n   - Слайд 2: Введение/Оглавление (3-4 основных раздела)\n   - Слайды 3-8: Основной контент (каждый слайд — одна тема)\n   - Слайд 9: Заключение/Выводы\n   - Слайд 10: Источники информации или \"Спасибо за внимание\"\n3. Содержание буллетов:\n   - Каждый буллет должен быть ПОДРОБНЫМ (минимум 15-25 слов)\n   - Включай конкретные факты, цифры, даты, имена\n   - Используй 4-6 буллетов на слайд\n   - Избегай общих фраз вроде \"важность темы\" — пиши конкретику\n   - Пример ПЛОХОГО буллета: \"Влияние на экономику\"\n   - Пример ХОРОШЕГО буллета: \"ВВП страны вырос на 15% за 5 лет, что привело к созданию 200,000 новых рабочих мест и увеличению экспорта на $3 млрд\"\n4. Глубина раскрытия темы:\n   - Объясняй причинно-следственные связи\n   - Приводи конкретные примеры\n   - Указывай преимущества и недостатки\n   - Добавляй исторический контекст, если уместно\n5. Запрещено:\n   - Писать буллеты короче 10 слов\n   - Использовать общие фразы без конкретики\n   - Повторять одну и ту же информацию на разных слайдах\n   - Добавлять текст вне JSON-структуры\n\nПРИМЕР ХОРОШЕГО СЛАЙДА:\n{\n  \"title\": \"Экономические последствия реформы\",\n  \"bullets\": [\n    \"ВВП страны вырос с $500 млрд до $750 млрд за период 2010-2015 годов (+50%), что стало рекордным показателем за последние 20 лет\",\n    \"Уровень безработицы снизился с 12% до 6%, благодаря созданию 1.2 млн новых рабочих мест в секторах IT и производства\",\n    \"Инфляция стабилизировалась на уровне 3-4% в год после периода высокой волатильности (15-20% в 2008-2009)\",\n    \"Прямые иностранные инвестиции увеличились на $45 млрд, основные инвесторы: Германия (28%), Китай (22%), США (18%)\"\n  ]\n}\n\nВАЖНО: Отвечай ТОЛЬКО JSON, без пояснений, без markdown-блоков, без дополнительного текста!`,\n\n  word_generator: `Ты — эксперт по созданию докладов и рефератов. Твоя задача — создавать подробные, структурированные документы на основе запросов пользователя.\n\nОТВЕЧАЙ СТРОГО В ФОРМАТЕ JSON без какого-либо дополнительного текста:\n\n{\n  \"type\": \"word_document\",\n  \"title\": \"Название доклада\",\n  \"subtitle\": \"Подзаголовок или автор (необязательно)\",\n  \"sections\": [\n    {\n      \"title\": \"Название раздела 1\",\n      \"intro\": \"Краткое введение к разделу (2-3 предложения)\",\n      \"subsections\": [\n        {\n          \"title\": \"Подраздел 1.1\",\n          \"content\": \"Основной текст подраздела (подробный, 3-5 предложений)\",\n          \"bullets\": [\"Ключевой пункт 1\", \"Ключевой пункт 2\", \"Ключевой пункт 3\"]\n        }\n      ],\n      \"conclusion\": \"Краткий вывод по разделу (1-2 предложения)\"\n    }\n  ],\n  \"conclusion\": \"Общее заключение всего доклада (3-5 предложений)\",\n  \"sources\": [\"Источник 1\", \"Источник 2\"]\n}\n\nПРАВИЛА ЗАПОЛНЕНИЯ:\n1. Структура:\n   - Минимум 4-6 основных разделов\n   - Каждый раздел: 2-3 подраздела\n   - Общий объем: 1500-2500 слов\n2. Содержание:\n   - Каждый подраздел: подробный текст (минимум 100-150 слов)\n   - Буллеты: 3-5 ключевых пунктов на подраздел\n   - Введение к разделу: контекст и актуальность\n   - Вывод по разделу: основные итоги\n   - Заключение: обобщение всех разделов\n3. Стиль:\n   - Академический, но доступный язык\n   - Конкретные факты, цифры, примеры\n   - Логичная структура и связность\n   - Избегай общих фраз без конкретики\n4. Источники:\n   - Укажи 3-5 релевантных источников (книги, статьи, сайты)\n   - Формат: \"Автор. Название. Год.\"\n\nПРИМЕР ХОРОШЕГО РАЗДЕЛА:\n{\n  \"title\": \"История развития искусственного интеллекта\",\n  \"intro\": \"Искусственный интеллект прошел долгий путь от теоретических концепций до практических приложений. Первые идеи возникли в середине XX века.\",\n  \"subsections\": [\n    {\n      \"title\": \"1950-1970-е: Зарождение AI\",\n      \"content\": \"В 1956 году на Дартмутской конференции был официально введен термин 'искусственный интеллект'. В этот период были созданы первые программы для доказательства теорем и игры в шахматы.\",\n      \"bullets\": [\"Дартмутская конференция 1956 года\", \"Программа Logic Theorist (1956)\", \"Первые нейронные сети (персептроны)\", \"Оптимизм и завышенные ожидания\"]\n    }\n  ],\n  \"conclusion\": \"Первые десятилетия развития AI заложили фундамент для современных технологий, несмотря на период 'AI зимы'.\"\n}\n\nВАЖНО: Отвечай ТОЛЬКО JSON, без пояснений, без markdown-блоков, без дополнительного текста!`,\n\n  text_assistant: `Ты — умный ассистент-программист.\n\nЗАДАЧИ:\n1. АНАЛИЗ КОДА: Если получен код — найди ошибки, объясни их, предложи исправления, оптимизируй.\n2. ОТВЕТЫ НА ВОПРОСЫ: Если получен вопрос — ответь четко и по делу.\n3. ПОИСК ИНФОРМАЦИИ: Если для ответа нужны актуальные данные (версии библиотек, документация, новости) — используй Tavily.\n\nПРАВИЛА:\n- Отвечай на русском языке.\n- Будь краток и конкретен, без \"воды\".\n- Если не знаешь ответа — честно скажи об этом.\n- Используй инструменты только когда это действительно нужно.\n- Помни контекст разговора (у тебя есть память).\n\nФОРМАТ ОТВЕТА:\n- Для кода: объяснение проблемы + исправленный код в блоке \\`код\\`\n- Для вопросов: прямой ответ + краткое объяснение`\n};\n\n// ============================================\n// ОПРЕДЕЛЕНИЕ ТИПА ЗАПРОСА\n// ============================================\nconst message = $json.message;\nlet promptType = 'text_assistant';\n\n// 1. Определяем тип промпта\nif (message.photo) {\n  promptType = 'photo_analyst';\n} else if (message.voice) {\n  promptType = 'voice_assistant';\n} else if (message.text) {\n  const text = message.text.toLowerCase();\n  if (text.includes('презентац') || text.includes('pptx') || text.includes('слайды')) {\n    promptType = 'presentation_generator';\n  } else if (text.includes('доклад') || text.includes('word') || text.includes('docx') || text.includes('реферат') || text.includes('отчет')) {\n    promptType = 'word_generator';\n  }\n}\n\n// 2. ИЗВЛЕКАЕМ ЧИСТЫЙ ТЕКСТ (решение проблемы хрупкой цепочки)\nlet userInput = '';\nif (message.text) {\n  userInput = message.text; // Текст уже нормализован нодами Code1 или Code2, либо пришел напрямую\n} else {\n  // Резервный вариант на всякий случай, если структура вдруг отличается\n  userInput = $('Code in JavaScript2').first().json.message?.text || \n              $('Code in JavaScript1').first().json.message?.text || \n              $('Telegram Trigger').first().json.message?.text || \n              '';\n}\n\n// ============================================\n// 3. ВОЗВРАТ С СИСТЕМНЫМ ПРОМПТОМ И userInput\n// ============================================\nreturn [{\n  json: {\n    ...$json,\n    systemPrompt: PROMPTS[promptType],\n    promptType: promptType,\n    userInput: userInput // <--- ДОБАВЛЯЕМ ЭТО ПОЛЕ\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1632,
+        112
+      ],
+      "id": "92ed5eca-4c11-48b0-b642-ec7ffdd7f1bf",
+      "name": "Load prompt"
+    },
+    {
+      "parameters": {
+        "jsCode": "const presentationData = $json.presentationData;\nconst chatId = $json.chatId;\n\n// Читаем путь напрямую из переменных окружения\nconst outputDir = $env.PRESENTATION_OUTPUT_DIR;\nconst outputPath = `${outputDir}\\\\${chatId}.pptx`;\n\nreturn [{\n  json: {\n    // Мы сразу формируем готовую JSON-строку для отправки\n    requestBody: JSON.stringify({\n      presentationData: presentationData,\n      outputPath: outputPath\n    })\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        -80
+      ],
+      "id": "7eabc27d-ef4c-4868-8b49-e1ba39cd200a",
+      "name": "Prepare presentation request"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    url: $env.FILE_GENERATOR_URL,\n    presDir: $env.PRESENTATION_OUTPUT_DIR,\n    wordDir: $env.WORD_OUTPUT_DIR\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2256,
+        -176
+      ],
+      "id": "a1bd28f4-4db6-4380-a72a-bb9cbbeda1be",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "jsCode": "const wordData = $json.wordData;\nconst chatId = $json.chatId;\n\nconst outputDir = $env.WORD_OUTPUT_DIR;\nconst outputPath = `${outputDir}\\\\${chatId}.docx`;\n\nreturn [{\n  json: {\n    requestBody: {\n      type: \"word_document\",\n      wordData: wordData,\n      outputPath: outputPath\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2624,
+        304
+      ],
+      "id": "97c2f902-ede7-4219-8421-aa3369b7de63",
+      "name": "Prepare word request"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId || $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "😔 Произошла непредвиденная ошибка сервиса. Мы уже чиним, попробуй, пожалуйста, через минуту.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2240,
+        256
+      ],
+      "id": "4d3469f2-1798-4119-af03-f6a49d1c24c6",
+      "name": "Send a text message4",
+      "webhookId": "8ea63930-6bf1-4023-965f-163b65e655cf",
+      "credentials": {
+        "telegramApi": {
+          "id": "VrGBXmDf2lWWK8w0",
+          "name": "Telegram account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId || $('Telegram Trigger').first().json.message.chat.id }}\n\n",
+        "text": "=😔 Произошла непредвиденная ошибка сервиса. Мы уже чиним, попробуй, пожалуйста, через минуту.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1424,
+        -208
+      ],
+      "id": "a42755ea-d821-45b8-974f-d71f80bb8dbc",
+      "name": "Send a text message5",
+      "webhookId": "fe13ba8d-ffc7-4053-8546-6ed6751fb797",
+      "credentials": {
+        "telegramApi": {
+          "id": "VrGBXmDf2lWWK8w0",
+          "name": "Telegram account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chatId || $('Telegram Trigger').first().json.message.chat.id }}",
+        "text": "=😔 Произошла непредвиденная ошибка сервиса. Мы уже чиним, попробуй, пожалуйста, через минуту.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1312,
+        448
+      ],
+      "id": "9233e153-a85b-46b9-8c19-60596045c216",
+      "name": "Send a text message6",
+      "webhookId": "e96f896b-126a-4913-a0fe-494eb0a8adc7",
+      "credentials": {
+        "telegramApi": {
+          "id": "VrGBXmDf2lWWK8w0",
+          "name": "Telegram account 6"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search the web in Tavily": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Get a photo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a voice",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Load prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze an image": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Analyze an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Load prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Load prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Status: presentation",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Prepare presentation request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare word request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Status: word",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request4": {
+      "main": [
+        [
+          {
+            "node": "Send a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request5": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request6": {
+      "main": [
+        [
+          {
+            "node": "Send a document1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Status: presentation": {
+      "main": [
+        []
+      ]
+    },
+    "Status: word": {
+      "main": [
+        []
+      ]
+    },
+    "Send a document": {
+      "main": [
+        []
+      ]
+    },
+    "Send a document1": {
+      "main": [
+        []
+      ]
+    },
+    "Send a text message2": {
+      "main": [
+        []
+      ]
+    },
+    "Get a voice": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a photo": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load prompt": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare presentation request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare word request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "5fb7aafd-8e2b-44c1-bbf3-b6cbf4adbea0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c5d5d93b0494ca9b0d57db941247132d910e07e0f89e155c74d0f99b08868a3c"
+  },
+  "nodeGroups": [],
+  "id": "xIkfE3vBnmwVi2pt",
+  "tags": []
+}
